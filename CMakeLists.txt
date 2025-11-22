@@ -11,12 +11,17 @@ message(STATUS "LLVM include dir: ${LLVM_INCLUDE_DIRS}")
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-add_executable(dalton src/main.cpp)
+file(GLOB_RECURSE DALTON_SOURCES
+    src/*.cpp
+    src/*.h
+)
+
+add_executable(dalton ${DALTON_SOURCES})
 
 llvm_map_components_to_libnames(LLVM_LIBS
-  Core
-  Support
-  IRReader
+    Core
+    Support
+    IRReader
 )
 
 target_link_libraries(dalton PRIVATE ${LLVM_LIBS})
