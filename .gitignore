@@ -42,3 +42,6 @@
 
 # nix
 .direnv/
+
+# build
+build/
