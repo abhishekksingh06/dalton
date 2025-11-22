@@ -1,16 +1,14 @@
 {
-  description = "C/C++ environment";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     utils.url = "github:numtide/flake-utils";
   };
   outputs =
     {
-      self,
       nixpkgs,
       utils,
       ...
-    }@inputs:
+    }:
     utils.lib.eachDefaultSystem (
       system:
       let
@@ -30,7 +28,7 @@
         '';
       in
       {
-        devShell = p.mkShell rec {
+        devShell = p.mkShell {
           packages = with p; [
             gnumake
             cmake
@@ -51,7 +49,7 @@
           ];
 
           shellHook = ''
-            export CXX="clang++ -stdlib=libc++"
+            export CXX="clang++"
             export CC="clang"
             cat > compile_flags.txt << EOF
             -stdlib=libc++
@@ -59,7 +57,7 @@
             EOF
           '';
 
-          name = "C";
+          name = "dalton";
         };
       }
     );
