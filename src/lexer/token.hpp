@@ -1,4 +1,4 @@
-#include <cstdint>
+#include "../core/location.hpp"
 #include <string>
 namespace dalton::lexer {
 enum TokenType {
@@ -8,15 +8,9 @@ enum TokenType {
   Minus,
   EndOfFile,
 };
-
-struct SourceLocation {
-  uint32_t line;
-  uint32_t column;
-};
-
 struct Token {
   TokenType type;
   std::string lexeme;
-  SourceLocation location;
+  dalton::core::SourceLocation location;
 };
 }; // namespace dalton::lexer
