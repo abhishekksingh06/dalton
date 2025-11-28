@@ -1,2 +1,2 @@
-mod lexer;
-mod span;
+pub mod lexer;
+pub mod span;
