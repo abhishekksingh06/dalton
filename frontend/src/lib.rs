@@ -1,2 +1,2 @@
 mod lexer;
-mod location;
+mod span;
