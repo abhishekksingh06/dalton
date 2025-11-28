@@ -47,14 +47,42 @@ impl<'a> Lexer<'a> {
     }
 
     #[inline]
-    fn get_token_kind(&self, start: usize, ch: char) -> Result<TokenKind, LexerError> {
+    fn match_next_char(&mut self, start: usize, expected: char) -> Result<bool, LexerError> {
+        match self.cursor.peek() {
+            Some(c) => {
+                if c != expected {
+                    return Ok(false);
+                }
+                self.cursor.consume();
+                Ok(true)
+            }
+            None => Err(LexerError::UnexpectedEof {
+                span: self.get_source_span(start),
+            }),
+        }
+    }
+
+    #[inline]
+    fn get_token_kind(&mut self, start: usize, ch: char) -> Result<TokenKind, LexerError> {
         let kind = match ch {
+            // Delimiters
             '(' => TokenKind::LParen,
             ')' => TokenKind::RParen,
             '{' => TokenKind::LBrace,
             '}' => TokenKind::RBrace,
             '[' => TokenKind::LBracket,
             ']' => TokenKind::RBracket,
+
+            // Operator
+            '+' => TokenKind::Plus,
+            '-' => TokenKind::Minus,
+            '*' => TokenKind::Star,
+            '/' => TokenKind::Slash,
+            '%' => TokenKind::Percent,
+            '^' => TokenKind::Caret,
+            '!' => TokenKind::Bang,
+            '&' if self.match_next_char(start, '&')? => TokenKind::AndAnd,
+            '|' if self.match_next_char(start, '|')? => TokenKind::OrOr,
             _ => {
                 return Err(LexerError::UnexpectedChar {
                     found: ch,
