@@ -8,9 +8,12 @@ pub fn lookup_keyword(ident: String) -> TokenKind {
         "var" => TokenKind::Var,
         "if" => TokenKind::If,
         "else" => TokenKind::Else,
+        "for" => TokenKind::For,
         "while" => TokenKind::While,
         "break" => TokenKind::Break,
         "coutinue" => TokenKind::Continue,
+        "true" => TokenKind::True,
+        "false" => TokenKind::False,
         _ => TokenKind::Identifier(ident),
     }
 }
