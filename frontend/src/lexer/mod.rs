@@ -3,11 +3,13 @@ use miette::SourceSpan;
 use crate::lexer::{
     cursor::Cursor,
     error::LexerError,
+    keywords::lookup_keyword,
     token::{Token, TokenKind},
 };
 
 mod cursor;
 pub mod error;
+mod keywords;
 pub mod token;
 
 pub struct Lexer<'a> {
@@ -62,6 +64,18 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    fn lex_keyword(&mut self, first: char) -> TokenKind {
+        let mut ident = String::from(first);
+        while let Some(c) = self.cursor.peek() {
+            if !(c.is_ascii_alphanumeric() || c == '_') {
+                break;
+            }
+            ident.push(c);
+            self.cursor.consume();
+        }
+        lookup_keyword(ident)
+    }
+
     #[inline]
     fn get_token_kind(&mut self, start: usize, ch: char) -> Result<TokenKind, LexerError> {
         let kind = match ch {
@@ -105,6 +119,8 @@ impl<'a> Lexer<'a> {
 
             '>' if self.consume_if(start, '=')? => TokenKind::GreaterEqual,
             '>' => TokenKind::Greater,
+
+            'a'..='z' | 'A'..='Z' | '_' => self.lex_keyword(ch),
 
             _ => {
                 return Err(LexerError::UnexpectedChar {
