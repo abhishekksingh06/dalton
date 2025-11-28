@@ -1,4 +1,4 @@
-use miette::{SourceOffset, SourceSpan};
+use miette::SourceSpan;
 
 use crate::lexer::{
     cursor::Cursor,
@@ -47,16 +47,14 @@ impl<'a> Lexer<'a> {
     }
 
     #[inline]
-    fn next_token(&mut self) -> Result<Token, LexerError> {
-        let start = self.cursor.pos();
-        self.skip_whitespace();
-        let ch = match self.cursor.consume() {
-            Some(c) => c,
-            None => return Ok(self.make_token(start, TokenKind::Eof)),
-        };
+    fn get_token_kind(&self, start: usize, ch: char) -> Result<TokenKind, LexerError> {
         let kind = match ch {
             '(' => TokenKind::LParen,
             ')' => TokenKind::RParen,
+            '{' => TokenKind::LBrace,
+            '}' => TokenKind::RBrace,
+            '[' => TokenKind::LBracket,
+            ']' => TokenKind::RBracket,
             _ => {
                 return Err(LexerError::UnexpectedChar {
                     found: ch,
@@ -64,7 +62,18 @@ impl<'a> Lexer<'a> {
                 });
             }
         };
+        Ok(kind)
+    }
 
+    #[inline]
+    fn next_token(&mut self) -> Result<Token, LexerError> {
+        let start = self.cursor.pos();
+        self.skip_whitespace();
+        let ch = match self.cursor.consume() {
+            Some(c) => c,
+            None => return Ok(self.make_token(start, TokenKind::Eof)),
+        };
+        let kind = self.get_token_kind(start, ch)?;
         Ok(self.make_token(start, kind))
     }
 
