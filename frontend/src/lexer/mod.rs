@@ -40,6 +40,137 @@ impl<'a> Lexer<'a> {
         SourceSpan::new(start.into(), len)
     }
 
+    fn lex_string_literal(&mut self, start: usize) -> Result<TokenKind, LexerError> {
+        let mut value = String::new();
+
+        loop {
+            let c = match self.cursor.consume() {
+                Some(ch) => ch,
+                None => {
+                    return Err(LexerError::UnterminatedString {
+                        span: (start..self.cursor.pos()).into(),
+                    });
+                }
+            };
+
+            match c {
+                '"' => {
+                    // End of string
+                    return Ok(TokenKind::StringLiteral(value));
+                }
+
+                '\n' => {
+                    return Err(LexerError::NewlineInString {
+                        span: (self.cursor.pos() - 1..self.cursor.pos()).into(),
+                    });
+                }
+
+                '\\' => {
+                    self.handle_escape(start, &mut value)?;
+                }
+
+                // UTF-8 characters naturally work here
+                other => value.push(other),
+            }
+        }
+    }
+
+    fn handle_escape(&mut self, escape_start: usize, out: &mut String) -> Result<(), LexerError> {
+        let next = match self.cursor.consume() {
+            Some(ch) => ch,
+            None => {
+                return Err(LexerError::IncompleteEscapeSequence {
+                    span: (escape_start..self.cursor.pos()).into(),
+                });
+            }
+        };
+
+        match next {
+            'n' => out.push('\n'),
+            't' => out.push('\t'),
+            'r' => out.push('\r'),
+            '"' => out.push('"'),
+            '\\' => out.push('\\'),
+
+            // Unicode escape (simple)
+            'u' => {
+                self.handle_unicode_escape(escape_start, out)?;
+            }
+
+            other => {
+                return Err(LexerError::InvalidEscapeSequence {
+                    escape: other,
+                    span: (escape_start..self.cursor.pos()).into(),
+                });
+            }
+        }
+
+        Ok(())
+    }
+
+    fn handle_unicode_escape(
+        &mut self,
+        escape_start: usize,
+        out: &mut String,
+    ) -> Result<(), LexerError> {
+        match self.cursor.consume() {
+            Some('{') => {}
+            _ => {
+                return Err(LexerError::InvalidUnicodeEscape {
+                    span: (escape_start..self.cursor.pos()).into(),
+                });
+            }
+        }
+
+        let mut hex = String::new();
+
+        loop {
+            let c = match self.cursor.consume() {
+                Some(ch) => ch,
+                None => {
+                    return Err(LexerError::IncompleteEscapeSequence {
+                        span: (escape_start..self.cursor.pos()).into(),
+                    });
+                }
+            };
+
+            match c {
+                '}' => break,
+                x if x.is_ascii_hexdigit() => hex.push(x),
+                _ => {
+                    return Err(LexerError::InvalidUnicodeEscape {
+                        span: (escape_start..self.cursor.pos()).into(),
+                    });
+                }
+            }
+        }
+
+        if hex.is_empty() {
+            return Err(LexerError::InvalidUnicodeEscape {
+                span: (escape_start..self.cursor.pos()).into(),
+            });
+        }
+
+        let value = u32::from_str_radix(&hex, 16).unwrap();
+
+        if value > 0x10FFFF {
+            return Err(LexerError::UnicodeEscapeOutOfRange {
+                value,
+                span: (escape_start..self.cursor.pos()).into(),
+            });
+        }
+
+        match char::from_u32(value) {
+            Some(ch) => {
+                out.push(ch);
+                Ok(())
+            }
+            None => Err(LexerError::InvalidUnicodeEscape {
+                span: (escape_start..self.cursor.pos()).into(),
+            }),
+        }
+    }
+
     #[inline]
     fn make_token(&self, start: usize, kind: TokenKind) -> Token {
         Token {
@@ -121,6 +252,7 @@ impl<'a> Lexer<'a> {
             '>' => TokenKind::Greater,
 
             'a'..='z' | 'A'..='Z' | '_' => self.lex_keyword(ch),
+            '"' => self.lex_string_literal(start)?,
 
             _ => {
                 return Err(LexerError::UnexpectedChar {
