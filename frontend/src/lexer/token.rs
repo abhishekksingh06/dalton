@@ -7,8 +7,8 @@ pub enum TokenKind {
 
     // Identifiers & Literals (with values)
     Identifier(String),
-    IntegerLiteral(i64),
-    FloatLiteral(f64),
+    IntegerLiteral(String),
+    FloatLiteral(String),
     StringLiteral(String),
     CharLiteral(char),
     True,

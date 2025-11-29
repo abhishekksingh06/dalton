@@ -55,7 +55,6 @@ impl<'a> Lexer<'a> {
 
             match c {
                 '"' => {
-                    // End of string
                     return Ok(TokenKind::StringLiteral(value));
                 }
 
@@ -69,7 +68,6 @@ impl<'a> Lexer<'a> {
                     self.handle_escape(start, &mut value)?;
                 }
 
-                // UTF-8 characters naturally work here
                 other => value.push(other),
             }
         }
@@ -171,6 +169,105 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    fn collect_digits(
+        &mut self,
+        out: &mut String,
+        valid: impl Fn(char) -> bool,
+    ) -> Result<(), LexerError> {
+        let mut last_was_underscore = false;
+        let mut seen_digit = false;
+
+        while let Some(c) = self.cursor.peek() {
+            if c == '_' {
+                if !seen_digit || last_was_underscore {
+                    return Err(LexerError::InvalidNumber {
+                        span: self.get_source_span(self.cursor.pos()),
+                    });
+                }
+                last_was_underscore = true;
+                out.push(self.cursor.consume().unwrap());
+            } else if valid(c) {
+                seen_digit = true;
+                last_was_underscore = false;
+                out.push(self.cursor.consume().unwrap());
+            } else {
+                break;
+            }
+        }
+
+        if last_was_underscore {
+            return Err(LexerError::InvalidNumber {
+                span: self.get_source_span(self.cursor.pos()),
+            });
+        }
+
+        Ok(())
+    }
+
+    fn lex_number(&mut self, first: char) -> Result<TokenKind, LexerError> {
+        let mut s = String::new();
+        s.push(first);
+        let base = if first == '0' {
+            match self.cursor.peek() {
+                Some('b') | Some('B') => {
+                    s.push(self.cursor.consume().unwrap());
+                    self.collect_digits(&mut s, |c| c == '0' || c == '1')?;
+                    2
+                }
+                Some('o') | Some('O') => {
+                    s.push(self.cursor.consume().unwrap());
+                    self.collect_digits(&mut s, |c| ('0'..='7').contains(&c))?;
+                    8
+                }
+                Some('x') | Some('X') => {
+                    s.push(self.cursor.consume().unwrap());
+                    self.collect_digits(&mut s, |c| c.is_ascii_hexdigit())?;
+                    16
+                }
+                _ => 10,
+            }
+        } else {
+            10
+        };
+
+        if base != 10 {
+            return Ok(TokenKind::IntegerLiteral(s));
+        }
+
+        self.collect_digits(&mut s, |c| c.is_ascii_digit())?;
+
+        let mut is_float = false;
+        if self.cursor.peek() == Some('.') {
+            self.cursor.consume();
+            if let Some(c) = self.cursor.peek() {
+                if c.is_ascii_digit() {
+                    is_float = true;
+                    s.push('.');
+                    self.collect_digits(&mut s, |d| d.is_ascii_digit())?;
+                } else {
+                    return Ok(TokenKind::IntegerLiteral(s));
+                }
+            }
+        }
+
+        if let Some(_e @ ('e' | 'E')) = self.cursor.peek() {
+            is_float = true;
+            s.push(self.cursor.consume().unwrap());
+
+            if let Some(_sign @ ('+' | '-')) = self.cursor.peek() {
+                s.push(self.cursor.consume().unwrap());
+            }
+
+            self.collect_digits(&mut s, |c| c.is_ascii_digit())?;
+        }
+
+        if is_float {
+            Ok(TokenKind::FloatLiteral(s))
+        } else {
+            Ok(TokenKind::IntegerLiteral(s))
+        }
+    }
+
     #[inline]
     fn make_token(&self, start: usize, kind: TokenKind) -> Token {
         Token {
@@ -253,6 +350,7 @@ impl<'a> Lexer<'a> {
 
             'a'..='z' | 'A'..='Z' | '_' => self.lex_keyword(ch),
             '"' => self.lex_string_literal(start)?,
+            '0'..='9' => self.lex_number(ch)?,
 
             _ => {
                 return Err(LexerError::UnexpectedChar {
