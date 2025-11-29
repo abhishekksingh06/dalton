@@ -7,7 +7,7 @@ pub enum TokenKind {
 
     // Identifiers & Literals (with values)
     Identifier(String),
-    IntegerLiteral(String),
+    IntegerLiteral { value: String, base: u32 },
     FloatLiteral(String),
     StringLiteral(String),
     CharLiteral(char),
@@ -70,77 +70,80 @@ pub enum TokenKind {
     Arrow,     // ->
 }
 
-use std::fmt;
-
-impl fmt::Display for TokenKind {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl TokenKind {
+    pub fn to_string_value(&self) -> String {
         match self {
-            // End & Invalid
-            TokenKind::Eof => write!(f, "EOF"),
+            TokenKind::Eof => "EOF".into(),
 
-            // Identifiers & Literals
-            TokenKind::Identifier(s) => write!(f, "Identifier({})", s),
-            TokenKind::IntegerLiteral(i) => write!(f, "IntegerLiteral({})", i),
-            TokenKind::FloatLiteral(fl) => write!(f, "FloatLiteral({})", fl),
-            TokenKind::StringLiteral(s) => write!(f, "StringLiteral(\"{}\")", s),
-            TokenKind::CharLiteral(c) => write!(f, "CharLiteral('{}')", c),
-            TokenKind::True => write!(f, "true"),
-            TokenKind::False => write!(f, "false"),
+            TokenKind::Identifier(s) => s.clone(),
+
+            TokenKind::IntegerLiteral { value, base } => {
+                format!("{} (base {})", value, base)
+            }
+
+            TokenKind::FloatLiteral(fl) => fl.to_string(),
+
+            TokenKind::StringLiteral(s) => s.clone(),
+
+            TokenKind::CharLiteral(c) => c.to_string(),
+
+            TokenKind::True => "true".into(),
+            TokenKind::False => "false".into(),
 
             // Keywords
-            TokenKind::Fn => write!(f, "fn"),
-            TokenKind::Return => write!(f, "return"),
-            TokenKind::Let => write!(f, "let"),
-            TokenKind::Var => write!(f, "var"),
-            TokenKind::If => write!(f, "if"),
-            TokenKind::Else => write!(f, "else"),
-            TokenKind::For => write!(f, "for"),
-            TokenKind::While => write!(f, "while"),
-            TokenKind::Break => write!(f, "break"),
-            TokenKind::Continue => write!(f, "continue"),
+            TokenKind::Fn => "fn".into(),
+            TokenKind::Return => "return".into(),
+            TokenKind::Let => "let".into(),
+            TokenKind::Var => "var".into(),
+            TokenKind::If => "if".into(),
+            TokenKind::Else => "else".into(),
+            TokenKind::For => "for".into(),
+            TokenKind::While => "while".into(),
+            TokenKind::Break => "break".into(),
+            TokenKind::Continue => "continue".into(),
 
             // Operators
-            TokenKind::Plus => write!(f, "+"),
-            TokenKind::Minus => write!(f, "-"),
-            TokenKind::Star => write!(f, "*"),
-            TokenKind::Slash => write!(f, "/"),
-            TokenKind::Percent => write!(f, "%"),
-            TokenKind::Caret => write!(f, "^"),
-            TokenKind::Bang => write!(f, "!"),
-            TokenKind::AndAnd => write!(f, "&&"),
-            TokenKind::OrOr => write!(f, "||"),
+            TokenKind::Plus => "+".into(),
+            TokenKind::Minus => "-".into(),
+            TokenKind::Star => "*".into(),
+            TokenKind::Slash => "/".into(),
+            TokenKind::Percent => "%".into(),
+            TokenKind::Caret => "^".into(),
+            TokenKind::Bang => "!".into(),
+            TokenKind::AndAnd => "&&".into(),
+            TokenKind::OrOr => "||".into(),
 
             // Comparisons
-            TokenKind::EqualEqual => write!(f, "=="),
-            TokenKind::NotEqual => write!(f, "!="),
-            TokenKind::Less => write!(f, "<"),
-            TokenKind::Greater => write!(f, ">"),
-            TokenKind::LessEqual => write!(f, "<="),
-            TokenKind::GreaterEqual => write!(f, ">="),
+            TokenKind::EqualEqual => "==".into(),
+            TokenKind::NotEqual => "!=".into(),
+            TokenKind::Less => "<".into(),
+            TokenKind::Greater => ">".into(),
+            TokenKind::LessEqual => "<=".into(),
+            TokenKind::GreaterEqual => ">=".into(),
 
             // Assignment
-            TokenKind::Equal => write!(f, "="),
+            TokenKind::Equal => "=".into(),
 
             // Compound assignment
-            TokenKind::PlusEqual => write!(f, "+="),
-            TokenKind::MinusEqual => write!(f, "-="),
-            TokenKind::StarEqual => write!(f, "*="),
-            TokenKind::SlashEqual => write!(f, "/="),
+            TokenKind::PlusEqual => "+=".into(),
+            TokenKind::MinusEqual => "-=".into(),
+            TokenKind::StarEqual => "*=".into(),
+            TokenKind::SlashEqual => "/=".into(),
 
             // Delimiters
-            TokenKind::LParen => write!(f, "("),
-            TokenKind::RParen => write!(f, ")"),
-            TokenKind::LBrace => write!(f, "{{"),
-            TokenKind::RBrace => write!(f, "}}"),
-            TokenKind::LBracket => write!(f, "["),
-            TokenKind::RBracket => write!(f, "]"),
+            TokenKind::LParen => "(".into(),
+            TokenKind::RParen => ")".into(),
+            TokenKind::LBrace => "{".into(),
+            TokenKind::RBrace => "}".into(),
+            TokenKind::LBracket => "[".into(),
+            TokenKind::RBracket => "]".into(),
 
             // Punctuation
-            TokenKind::Comma => write!(f, ","),
-            TokenKind::Dot => write!(f, "."),
-            TokenKind::Semicolon => write!(f, ";"),
-            TokenKind::Colon => write!(f, ":"),
-            TokenKind::Arrow => write!(f, "->"),
+            TokenKind::Comma => ",".into(),
+            TokenKind::Dot => ".".into(),
+            TokenKind::Semicolon => ";".into(),
+            TokenKind::Colon => ":".into(),
+            TokenKind::Arrow => "->".into(),
         }
     }
 }

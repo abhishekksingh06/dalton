@@ -124,64 +124,32 @@ pub enum LexerError {
         span: SourceSpan,
     },
 
-    #[error("Malformed number")]
+    #[error("Unterminated character literal")]
     #[diagnostic(
-        code(lexer::number_malformed),
-        help("The number has an invalid format.")
+        code(lexer::unterminated_char),
+        help("Character literals must end with a closing `'`.")
     )]
-    MalformedNumber {
-        #[label("number starts here")]
+    UnterminatedChar {
+        #[label("char literal starts here")]
+        span: SourceSpan,
+    },
+    #[error("Newline in character literal")]
+    #[diagnostic(
+        code(lexer::newline_in_char),
+        help("Character literals cannot contain newlines.")
+    )]
+    NewlineInChar {
+        #[label("newline inside char literal")]
         span: SourceSpan,
     },
 
-    #[error("Missing digits in number")]
+    #[error("Invalid character literal")]
     #[diagnostic(
-        code(lexer::number_missing_digits),
-        help("Numbers must contain valid digits.")
+        code(lexer::invalid_char_literal),
+        help("Character literal must contain exactly one character or one escape.")
     )]
-    MissingDigits {
-        #[label("expected at least one digit here")]
-        span: SourceSpan,
-    },
-
-    #[error("Invalid exponent format")]
-    #[diagnostic(
-        code(lexer::number_invalid_exponent),
-        help("Exponent must contain digits after 'e' or 'E'.")
-    )]
-    InvalidExponent {
-        #[label("invalid exponent here")]
-        span: SourceSpan,
-    },
-
-    #[error("Hex float requires digits after the decimal point")]
-    #[diagnostic(
-        code(lexer::hex_float_missing_digits),
-        help("A hexadecimal float must contain digits after '.' before 'p'.")
-    )]
-    HexFloatMissingFraction {
-        #[label("expected hex digits here")]
-        span: SourceSpan,
-    },
-
-    #[error("Hex float exponent must start with 'p' or 'P'")]
-    #[diagnostic(
-        code(lexer::hex_float_missing_p),
-        help("Hexadecimal floating-point numbers require a binary exponent starting with 'p'.")
-    )]
-    HexFloatMissingP {
-        #[label("expected 'p' here")]
-        span: SourceSpan,
-    },
-
-    #[error("Invalid hex float exponent")]
-    #[diagnostic(
-        code(lexer::hex_float_exponent),
-        help("Hex float exponent must contain digits.")
-    )]
-    InvalidHexFloatExponent {
-        #[label("invalid hex float exponent here")]
+    InvalidCharLiteral {
+        #[label("invalid character literal here")]
         span: SourceSpan,
     },
 }
-

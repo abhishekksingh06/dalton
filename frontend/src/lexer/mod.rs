@@ -180,7 +180,7 @@ impl<'a> Lexer<'a> {
         while let Some(c) = self.cursor.peek() {
             if c == '_' {
                 if !seen_digit || last_was_underscore {
-                    return Err(LexerError::InvalidNumber {
+                    return Err(LexerError::InvalidUnderscore {
                         span: self.get_source_span(self.cursor.pos()),
                     });
                 }
@@ -196,7 +196,7 @@ impl<'a> Lexer<'a> {
         }
 
         if last_was_underscore {
-            return Err(LexerError::InvalidNumber {
+            return Err(LexerError::InvalidUnderscore {
                 span: self.get_source_span(self.cursor.pos()),
             });
         }
@@ -231,7 +231,7 @@ impl<'a> Lexer<'a> {
         };
 
         if base != 10 {
-            return Ok(TokenKind::IntegerLiteral(s));
+            return Ok(TokenKind::IntegerLiteral { value: s, base });
         }
 
         self.collect_digits(&mut s, |c| c.is_ascii_digit())?;
@@ -245,7 +245,7 @@ impl<'a> Lexer<'a> {
                     s.push('.');
                     self.collect_digits(&mut s, |d| d.is_ascii_digit())?;
                 } else {
-                    return Ok(TokenKind::IntegerLiteral(s));
+                    return Ok(TokenKind::IntegerLiteral { value: s, base });
                 }
             }
         }
@@ -264,7 +264,7 @@ impl<'a> Lexer<'a> {
         if is_float {
             Ok(TokenKind::FloatLiteral(s))
         } else {
-            Ok(TokenKind::IntegerLiteral(s))
+            Ok(TokenKind::IntegerLiteral { value: s, base })
         }
     }
 
@@ -350,6 +350,7 @@ impl<'a> Lexer<'a> {
 
             'a'..='z' | 'A'..='Z' | '_' => self.lex_keyword(ch),
             '"' => self.lex_string_literal(start)?,
+            '\'' => self.lex_char_literal(start)?,
             '0'..='9' => self.lex_number(ch)?,
 
             _ => {
@@ -360,6 +361,43 @@ impl<'a> Lexer<'a> {
             }
         };
         Ok(kind)
+    }
+
+    fn lex_char_literal(&mut self, start: usize) -> Result<TokenKind, LexerError> {
+        let c = match self.cursor.consume() {
+            Some(ch) => ch,
+            None => {
+                return Err(LexerError::UnterminatedChar {
+                    span: self.get_source_span(start),
+                });
+            }
+        };
+
+        let value = match c {
+            '\\' => {
+                let mut tmp = String::new();
+                self.handle_escape(start, &mut tmp)?;
+                if tmp.chars().count() != 1 {
+                    return Err(LexerError::InvalidCharLiteral {
+                        span: self.get_source_span(start),
+                    });
+                }
+                tmp.chars().next().unwrap()
+            }
+            '\n' => {
+                return Err(LexerError::NewlineInChar {
+                    span: (self.cursor.pos() - 1..self.cursor.pos()).into(),
+                });
+            }
+            ch => ch,
+        };
+
+        match self.cursor.consume() {
+            Some('\'') => Ok(TokenKind::CharLiteral(value)),
+            _ => Err(LexerError::UnterminatedChar {
+                span: (start..self.cursor.pos()).into(),
+            }),
+        }
     }
 
     #[inline]

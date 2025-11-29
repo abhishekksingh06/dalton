@@ -3,7 +3,7 @@ use frontend::lexer::Lexer;
 fn main() {
     let tokens = Lexer::new(
         r#"
-let name = 928_;
+let name = '9';
 "#,
     )
     .tokens();
