@@ -1,5 +1,13 @@
-/** @page about About
-  @section doc ModernCppStarter Documentation 
-  This is the auto-generated documentation for the initial project of the ModernCppStarter.
-  It shows how we can use Doxygen to automatically build a browsable documentation for your projects.
-*/
+/** 
+ * @page about About
+ * @section doc Dalton Language Documentation
+ * 
+ * This is the auto-generated documentation for the Dalton programming language project.
+ * 
+ * Dalton is a modern, MLIR-powered programming language designed for:
+ *   - High performance (system-level and AI workloads)
+ *   - Safety (ownership, borrowing, optional types, strong typing)
+ *   - Simplicity (no hidden magic, clear rules, minimal keywords)
+ *   - Multi-target support (native, WebAssembly, and more)
+ */
+

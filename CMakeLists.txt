@@ -44,12 +44,14 @@ set(sources
     source/dalton.cpp
     source/core/diagnostics.cpp
     source/core/location.cpp
+    source/lexer/token.cpp
 )
 
 set(headers
     include/dalton/dalton.hpp
     include/dalton/core/location.hpp
     include/dalton/core/diagnostics.hpp
+    include/dalton/lexer/token.hpp
 )
 
 # ---- Create library ----
