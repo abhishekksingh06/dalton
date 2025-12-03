@@ -45,7 +45,7 @@ set(sources
 )
 
 set(headers
-    include/dalton/dalton.h
+    include/dalton/dalton.hpp
 )
 
 # ---- Create library ----
