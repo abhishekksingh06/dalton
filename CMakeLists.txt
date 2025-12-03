@@ -42,10 +42,14 @@ CPMAddPackage(
 
 set(sources
     source/dalton.cpp
+    source/core/diagnostics.cpp
+    source/core/location.cpp
 )
 
 set(headers
     include/dalton/dalton.hpp
+    include/dalton/core/location.hpp
+    include/dalton/core/diagnostics.hpp
 )
 
 # ---- Create library ----
