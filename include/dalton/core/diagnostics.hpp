@@ -85,7 +85,7 @@ public:
    * @param message  Error message
    * @param help     Optional help text or fixit hint
    */
-  void error(SourceLocation location, std::string message,
+  void error(const SourceLocation &location, std::string message,
              std::optional<std::string> help = std::nullopt);
 
   /**
@@ -95,7 +95,7 @@ public:
    * @param message  Warning message
    * @param help     Optional help or suggestion
    */
-  void warn(SourceLocation location, std::string message,
+  void warn(const SourceLocation &location, std::string message,
             std::optional<std::string> help = std::nullopt);
 
   /**

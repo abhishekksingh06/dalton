@@ -1,9 +1,10 @@
-#include "dalton/lexer/token.hpp"
+#include <utility>
+
 #include "dalton/core/location.hpp"
+#include "dalton/lexer/token.hpp"
 
 namespace dalton::lexer {
-
-Token::Token(TokenType type, core::SourceLocation location, std::string value)
-    : type(type), location(location), value(std::move(value)) {}
-
+Token::Token(const TokenType type, core::SourceLocation location,
+             std::string lexeme)
+    : type(type), location(std::move(location)), lexeme(std::move(lexeme)) {}
 } // namespace dalton::lexer

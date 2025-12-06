@@ -2,12 +2,10 @@
 
 #include "dalton/core/diagnostics.hpp"
 #include "dalton/lexer/token.hpp"
-#include <cstdint>
 #include <optional>
 #include <string>
 
 namespace dalton::lexer {
-
 class Lexer {
 private:
   std::int32_t line = 1;
@@ -17,14 +15,21 @@ private:
   std::string source;
   core::DiagnosticEngine &diag;
 
-  bool isAtEnd() const;
-  std::optional<char> peek() const;
+  [[nodiscard]] bool isAtEnd() const;
+  [[nodiscard]] std::optional<char> peek() const;
   std::optional<char> advance();
+
+  [[nodiscard]] core::SourceLocation currentLocation() const;
+  bool matchNext(char target);
+
+  [[nodiscard]] std::optional<Token> makeToken(TokenType type,
+                                               const std::string &lexeme) const;
+
+  std::optional<Token> lexSymbol(char first);
 
 public:
   Lexer(std::string filename, std::string source, core::DiagnosticEngine &diag);
 
-  Token nextToken();
+  std::optional<Token> nextToken();
 };
-
 } // namespace dalton::lexer

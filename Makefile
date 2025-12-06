@@ -18,19 +18,6 @@ run: standalone
 	./build/standalone/Dalton
 
 # ----------------------------------------------------------------------
-# Tests
-# ----------------------------------------------------------------------
-test:
-	cmake -S test -B build/test
-	cmake --build build/test
-	CTEST_OUTPUT_ON_FAILURE=1 cmake --build build/test --target test
-
-# Faster re-run of tests (no configure step if nothing changed)
-test-fast:
-	cmake --build build/test
-	CTEST_OUTPUT_ON_FAILURE=1 cmake --build build/test --target test
-
-# ----------------------------------------------------------------------
 # Code formatting (using clang-format target you already have)
 # ----------------------------------------------------------------------
 format:
