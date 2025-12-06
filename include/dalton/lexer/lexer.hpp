@@ -15,15 +15,16 @@ private:
   std::string source;
   core::DiagnosticEngine &diag;
 
-  [[nodiscard]] bool isAtEnd() const;
-  [[nodiscard]] std::optional<char> peek() const;
+  bool isAtEnd() const;
+  std::optional<char> peek() const;
   std::optional<char> advance();
 
-  [[nodiscard]] core::SourceLocation currentLocation() const;
+  core::SourceLocation currentLocation() const;
   bool matchNext(char target);
 
-  [[nodiscard]] std::optional<Token> makeToken(TokenType type,
-                                               const std::string &lexeme) const;
+  std::optional<Token> makeToken(TokenType type,
+                                 const std::string &lexeme) const;
+  std::optional<Token> lexIdent(const char first);
 
   std::optional<Token> lexSymbol(char first);
 

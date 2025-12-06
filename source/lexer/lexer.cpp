@@ -3,8 +3,68 @@
 #include <cctype>
 #include <format>
 #include <optional>
+#include <string>
+#include <unordered_map>
 
 namespace dalton::lexer {
+
+static const std::unordered_map<std::string, TokenType> KEYWORDS = {
+    {"let", TokenType::KwLet},
+    {"mut", TokenType::KwMut},
+    {"const", TokenType::KwConst},
+    {"fn", TokenType::KwFn},
+    {"struct", TokenType::KwStruct},
+    {"trait", TokenType::KwTrait},
+    {"enum", TokenType::KwEnum},
+    {"type", TokenType::KwType},
+    {"scope", TokenType::KwScope},
+    {"external", TokenType::KwExternal},
+    {"pub", TokenType::KwPub},
+    {"import", TokenType::KwImport},
+    {"where", TokenType::KwWhere},
+    {"if", TokenType::KwIf},
+    {"then", TokenType::KwThen},
+    {"else", TokenType::KwElse},
+    {"switch", TokenType::KwSwitch},
+    {"case", TokenType::KwCase},
+    {"default", TokenType::KwDefault},
+    {"for", TokenType::KwFor},
+    {"while", TokenType::KwWhile},
+    {"loop", TokenType::KwLoop},
+    {"break", TokenType::KwBreak},
+    {"continue", TokenType::KwContinue},
+    {"return", TokenType::KwReturn},
+    {"defer", TokenType::KwDefer},
+    {"in", TokenType::KwIn},
+    {"as", TokenType::KwAs},
+    {"nil", TokenType::KwNil},
+    {"true", TokenType::KwTrue},
+    {"false", TokenType::KwFalse},
+    {"try", TokenType::KwTry},
+    {"catch", TokenType::KwCatch},
+    {"compiletime", TokenType::KwCompiletime},
+    {"i8", TokenType::KwI8},
+    {"i16", TokenType::KwI16},
+    {"i32", TokenType::KwI32},
+    {"i64", TokenType::KwI64},
+    {"i128", TokenType::KwI128},
+    {"i256", TokenType::KwI256},
+    {"isize", TokenType::KwIsize},
+    {"u8", TokenType::KwU8},
+    {"u16", TokenType::KwU16},
+    {"u32", TokenType::KwU32},
+    {"u64", TokenType::KwU64},
+    {"u128", TokenType::KwU128},
+    {"u256", TokenType::KwU256},
+    {"usize", TokenType::KwUsize},
+    {"f32", TokenType::KwF32},
+    {"f64", TokenType::KwF64},
+    {"char", TokenType::KwChar},
+    {"str", TokenType::KwStr},
+    {"bool", TokenType::KwBool},
+    {"map", TokenType::KwMap},
+};
+
 Lexer::Lexer(std::string filename, std::string source,
              core::DiagnosticEngine &diag)
     : filename(std::move(filename)), source(std::move(source)), diag(diag) {
@@ -53,6 +113,27 @@ bool Lexer::matchNext(const char target) {
 std::optional<Token> Lexer::makeToken(const TokenType type,
                                       const std::string &lexeme) const {
   return Token{type, currentLocation(), lexeme};
+}
+
+std::optional<Token> Lexer::lexIdent(const char first) {
+  if (!(std::isalpha(static_cast<unsigned char>(first)) || first == '_'))
+    return std::nullopt;
+  std::string text{first};
+  while (true) {
+    auto c = peek();
+    if (!c.has_value())
+      break;
+    auto ch = static_cast<unsigned char>(*c);
+    if (!(std::isalnum(ch) || *c == '_'))
+      break;
+    text.push_back(*c);
+    advance();
+  }
+  auto it = KEYWORDS.find(text);
+  if (it != KEYWORDS.end()) {
+    return makeToken(it->second, text);
+  }
+  return makeToken(TokenType::Identifier, text);
 }
 
 std::optional<Token> Lexer::lexSymbol(const char first) {
@@ -148,21 +229,18 @@ std::optional<Token> Lexer::lexSymbol(const char first) {
 std::optional<Token> Lexer::nextToken() {
   while (!isAtEnd()) {
     char c = *peek();
-
     if (std::isspace(c)) {
       advance();
       continue;
     }
-
     advance();
-
     if (auto token = lexSymbol(c))
       return token;
-
+    if (auto token = lexIdent(c))
+      return token;
     diag.error(currentLocation(), std::format("unknown token: '{}'", c),
                "check for typos or unsupported characters");
   }
-
   return makeToken(TokenType::Eof, "");
 }
 } // namespace dalton::lexer
